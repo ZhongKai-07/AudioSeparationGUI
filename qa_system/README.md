@@ -31,3 +31,31 @@ uvicorn qa_system.app:app --host 0.0.0.0 --port 8000 --reload
 ## pyannote 说明
 
 当前代码中保留了 pyannote 接口抽象，但默认未启用完整 Pipeline 初始化。生产接入时请按你们私有环境增加 HuggingFace Token、模型与缓存策略。
+
+
+## MCP Tool 封装（供外部 Agent/LLM 调用）
+
+新增 `qa_system/mcp_tool_server.py`，可将离线转写能力直接暴露为 MCP Tool：
+
+- Tool 名称：`transcribe_audio_to_speaker_log`
+- 典型调用：`帮我转录一下录音文件“/path/to/audio.wav”`
+- 返回：说话人区分的日志文本（`speaker + 时间戳 + 文本`）
+
+### 运行
+
+```bash
+pip install mcp
+python -m qa_system.mcp_tool_server
+```
+
+### Tool 入参
+
+- `prompt: str`：自然语言指令，支持从引号中提取路径。
+- `diarization: str = "campp"`：`campp` 或 `pyannote`。
+- `merge_threshold_chars: int = 12`：相邻同 speaker 合并阈值。
+- `hotwords: str = ""`：热词，空格分隔。
+
+### 使用建议
+
+- 生产场景建议仅开放白名单目录，避免任意路径读取。
+- 当前 `pyannote` 仍需你们私有环境配置后启用。
